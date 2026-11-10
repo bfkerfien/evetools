@@ -1,6 +1,6 @@
-# TriffTools
+# EVE Tools
 
-TriffTools is the source for [triff.tools](https://triff.tools), a multi-service EVE Online utility site focused on wormhole, market, industry, fitting, and planning workflows.
+EVE Tools is a multi-service EVE Online utility site deployed at [evetools.triglavianconsortium.com](https://evetools.triglavianconsortium.com) focused on wormhole, market, industry, fitting, and planning workflows.
 
 The repo contains a React frontend, an Express/Postgres backend, background market workers, and a Python fitting sidecar built around Pyfa/eos.
 
@@ -24,7 +24,7 @@ The application includes calculators, planners, browsers, and game/reference too
 | `fitting-service/` | FastAPI sidecar for the `/fitting` tool. Builds a Pyfa game DB during Docker build and exposes fitting calculations to the backend. |
 | `market-worker/` | Separate Node worker for market aggregation support. |
 | `data/` | Local static data used by selected tools. |
-| `docker-compose.yml` | Production-style local stack: frontend, backend, Postgres, workers, Traefik, and fitting service. |
+| `docker-compose.yml` | Production stack: frontend, backend, Postgres, workers, and fitting service. It attaches to the host's existing external Docker network named `traefik`; it does not start a second Traefik instance. |
 | `Accounts.md` | Site account model, auth/session behavior, account-owned saves, and per-tool persistence notes. |
 | `anoikis-command.md` | Current game design and mechanics reference for Anoikis Command. |
 | `THIRD_PARTY_NOTICES.md` | Repo-wide third-party notices. Service-specific notes may exist in subdirectories. |
@@ -43,7 +43,7 @@ The application includes calculators, planners, browsers, and game/reference too
 | `market-worker` | Market aggregation worker. |
 | `market-orders-worker` | Imports CCP SDE data and polls live ESI market orders. |
 | `market-history-worker` | Imports rolling market history into `market_history_daily`. |
-| `traefik` | TLS/reverse proxy configuration for hosted domains. |
+| Existing Traefik | Host-level TLS/reverse proxy. The Compose stack joins the external Docker network named `traefik`. |
 
 ## Data Sources
 
@@ -66,10 +66,13 @@ Copy the example environment file and fill in the values that apply to the featu
 cp .env.example .env
 ```
 
-For the full Compose stack, `DATABASE_URL` should point at the Compose Postgres service:
+For the full Compose stack, set `POSTGRES_PASSWORD` to a strong random password and use the same password in `DATABASE_URL`, which points at the Compose Postgres service:
 
 ```env
-DATABASE_URL=postgres://user:pass@postgres:5432/triffnix
+POSTGRES_DB=evetools
+POSTGRES_USER=evetools
+POSTGRES_PASSWORD=replace-with-a-long-random-password
+DATABASE_URL=postgres://evetools:replace-with-a-long-random-password@postgres:5432/evetools
 PGSSL=false
 ```
 
@@ -78,7 +81,7 @@ The example file includes placeholders/defaults for contact webhooks, price warm
 The EVE SSO applications are deliberately separate:
 
 - `EVE_SSO_*` is only for TriffFits skill profiles and requests `publicData` plus `esi-skills.read_skills.v1`.
-- `SKILLNIX_EVE_SSO_*` is only for Skillnix. Its production callback is `https://triff.tools/api/character-monitor/esi/callback`; grant `publicData`, `esi-skills.read_skills.v1`, `esi-skills.read_skillqueue.v1`, `esi-clones.read_implants.v1`, `esi-clones.read_clones.v1`, and `esi-wallet.read_character_wallet.v1`.
+- `SKILLNIX_EVE_SSO_*` is only for Skillnix. Its production callback is `https://evetools.triglavianconsortium.com/api/character-monitor/esi/callback`; grant `publicData`, `esi-skills.read_skills.v1`, `esi-skills.read_skillqueue.v1`, `esi-clones.read_implants.v1`, `esi-clones.read_clones.v1`, and `esi-wallet.read_character_wallet.v1`.
 - `EVE_FITTINGS_SSO_*` is only for importing saved in-game fittings.
 
 Skillnix is in a closed, link-only test at `/skillnix`; it is intentionally absent from the landing page and Neocom.
@@ -182,7 +185,7 @@ The backend integration suite uses Docker to start a disposable `postgres:16` co
 - `market-orders-worker` imports CCP SDE data before polling ESI market orders.
 - `market-history-worker` retains 420 complete UTC days of raw market history. Every sync discovers missing dates across that entire window, including the additional older days on an existing 365-day installation, even when `totals.json` is unavailable. Available totals also repair incomplete days atomically. Hull Activity at `/hulls` uses the preceding 7/30/365 calendar days; the selected day is excluded and missing days count as zero.
 - The frontend nginx config proxies `/api` to `triffnix-backend:3000` in Docker.
-- Traefik labels target `triff.tools`, `www.triff.tools`, and `dev.triff.tools` for hosted deployments.
+- Traefik labels target `evetools.triglavianconsortium.com` through the existing host-level Traefik instance. The DNS A record for `evetools` must point to this server.
 
 ## Licensing
 
