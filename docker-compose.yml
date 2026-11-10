@@ -21,8 +21,6 @@ services:
     networks:
       - traefik
       - app-internal
-    ports:
-      - "127.0.0.1:8080:80"
 
   triffnix-backend:
     build:
@@ -60,8 +58,6 @@ services:
       FITTING_SERVICE_URL: http://fitting-service:8000
     env_file:
       - .env
-    ports:
-      - "127.0.0.1:3000:3000"
 
   fitting-service:
     build:
