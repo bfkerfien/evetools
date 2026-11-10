@@ -544,7 +544,7 @@ export default function App() {
                 to="/"
                 className="uppercase tracking-[0.22em] text-[12px] text-slate-200 hover:text-white transition-colors"
               >
-                Triff.Tools
+                EVE Tools
               </Link>
 
               <div className="relative">
@@ -689,7 +689,7 @@ export default function App() {
 
           <div className="border-t border-[#262933] bg-[#05070b] px-2 py-2 text-[10px] text-slate-500">
             <div className="flex items-center justify-between">
-              <span>Triff.Tools</span>
+              <span>EVE Tools</span>
               <span className="text-slate-600">3.14.0</span>
             </div>
           </div>
@@ -717,7 +717,7 @@ export default function App() {
         <div className="fixed inset-x-0 bottom-0 z-[80] border-t border-[#3a3c40] bg-[#05070b] px-3 py-3 shadow-[0_-10px_28px_rgba(0,0,0,0.85)]">
           <div className="mx-auto flex max-w-7xl flex-col items-center justify-center gap-3 text-center text-[11px] text-slate-300 sm:flex-row">
             <div className="leading-relaxed sm:text-left">
-              <span className="font-semibold text-slate-100">Triff.Tools uses Google Analytics</span>{" "}
+              <span className="font-semibold text-slate-100">EVE Tools uses Google Analytics</span>{" "}
               to understand site traffic.
             </div>
             <div className="flex items-center gap-2">
