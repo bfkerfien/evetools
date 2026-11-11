@@ -1825,6 +1825,8 @@ async function importTypeDogma(sdeRootDir) {
   }
 }
 
+let tmpDir = null;
+
 async function main() {
   try {
     await ensureEvesdeSchema();
@@ -1853,7 +1855,7 @@ async function main() {
       })…`
     );
 
-    const tmpDir = await fs.promises.mkdtemp(
+    tmpDir = await fs.promises.mkdtemp(
       path.join(os.tmpdir(), "eve-sde-")
     );
     const zipPath = path.join(tmpDir, "sde-latest-yaml.zip");
@@ -1886,6 +1888,14 @@ async function main() {
     console.error("[SDE_IMPORT]: FAILED:", err);
     process.exitCode = 1;
   } finally {
+    if (tmpDir) {
+      try {
+        await fs.promises.rm(tmpDir, { recursive: true, force: true });
+        console.log(`[SDE_IMPORT]: Removed temporary directory ${tmpDir}`);
+      } catch (cleanupError) {
+        console.error(`[SDE_IMPORT]: Failed to remove temporary directory ${tmpDir}:`, cleanupError);
+      }
+    }
     await pool.end();
   }
 }
