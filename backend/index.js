@@ -148,21 +148,38 @@ const OPENAPI_PATH =
   process.env.OPENAPI_PATH ||
   path.join(__dirname, "docs", "TriffTools-OpenAPI.yaml");
 
-const spec = yaml.parse(fs.readFileSync(OPENAPI_PATH, "utf8"));
+const hasOpenApiSpec = fs.existsSync(OPENAPI_PATH);
+let spec = null;
 
-app.get("/api/openapi.yaml", (req, res) => {
-  res.sendFile(OPENAPI_PATH);
-});
+if (hasOpenApiSpec) {
+  spec = yaml.parse(fs.readFileSync(OPENAPI_PATH, "utf8"));
+  app.get("/api/openapi.yaml", (req, res) => {
+    res.sendFile(OPENAPI_PATH);
+  });
+  app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(spec));
+  app.get("/api/redoc", redoc({
+    title: "EVE Tools API",
+    specUrl: "/api/openapi.yaml",
+  }));
+} else {
+  // API documentation is optional at runtime. A missing spec must never prevent
+  // database initialization or the application API from starting.
+  console.warn(
+    `[OPENAPI]: Specification not found at ${OPENAPI_PATH}; API documentation routes are disabled.`
+  );
+  const docsUnavailable = (req, res) => res.status(503).json({
+    ok: false,
+    error: "api_documentation_unavailable",
+    message: "The OpenAPI specification is not installed in this deployment.",
+  });
+  app.get("/api/openapi.yaml", docsUnavailable);
+  app.get("/api/docs", docsUnavailable);
+  app.get("/api/docs/*", docsUnavailable);
+  app.get("/api/redoc", docsUnavailable);
+}
 
 const priceCache = require('./lib/priceCache');
 priceCache.start();
-
-app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(spec));
-
-app.get("/api/redoc", redoc({
-  title: "Triff.Tools API",
-  specUrl: "/api/openapi.yaml",
-}));
 
 app.use((err, req, res, next) => {
   captureException(err, {
