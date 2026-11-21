@@ -351,6 +351,7 @@ const Industry: React.FC = () => {
     const [pasteText, setPasteText] = useState('');
     const [activeResultTab, setActiveResultTab] = useState<ResultTab>('summary');
     const [activeDetailTab, setActiveDetailTab] = useState<DetailTab>('bom');
+    const [activeShipTreeTab, setActiveShipTreeTab] = useState<number | null>(null);
     const [jobSort, setJobSort] = useState<{ key: JobSortKey; direction: SortDirection }>({
         key: 'tree',
         direction: 'asc',
@@ -1364,6 +1365,30 @@ const Industry: React.FC = () => {
             </ul>
         );
     };
+    const openShipTree = async (typeId: number, typeName: string) => {
+        const presetItems: ItemInput[] = [{
+            id: 1,
+            typeId,
+            typeName,
+            quantity: 1,
+            runsPerBpc: 1,
+            query: typeName,
+            suggestions: [],
+            showSuggestions: false,
+        }];
+        const presetSettings: IndustrySettings = {
+            ...settings,
+            includeReactions: true,
+            inputPriceMode: 'sell',
+        };
+        setActiveShipTreeTab(typeId);
+        setItems(presetItems);
+        setSettings(presetSettings);
+        setActiveResultTab('summary');
+        setActiveDetailTab('tree');
+        await handleSubmit(undefined, { items: presetItems, settings: presetSettings, overrides });
+    };
+
     const resultTabs: { id: ResultTab; label: string; count: number }[] = [
         {
             id: 'summary',
@@ -1507,6 +1532,32 @@ const Industry: React.FC = () => {
                                 . Adjust input / output price modes to switch between
                                 buy and sell orders.
                             </p>
+                        </div>
+
+                        <div role="tablist" aria-label="Ship production trees" className="flex flex-wrap gap-2">
+                            {[
+                                { typeId: 12731, label: 'Bustard' },
+                                { typeId: 12729, label: 'Crane' },
+                            ].map((ship) => {
+                                const selected = activeShipTreeTab === ship.typeId;
+                                return (
+                                    <button
+                                        key={ship.typeId}
+                                        type="button"
+                                        role="tab"
+                                        aria-selected={selected}
+                                        onClick={() => void openShipTree(ship.typeId, ship.label)}
+                                        className={classNames(
+                                            'border px-3 py-1.5 text-[10px] uppercase tracking-widest transition-colors',
+                                            selected
+                                                ? 'border-[#53b6ff] bg-[#102236] text-[#b9e3ff]'
+                                                : 'border-[#303236] bg-[#151a22] text-slate-300 hover:border-[#53b6ff] hover:text-[#e5f4ff]'
+                                        )}
+                                    >
+                                        {ship.label} A2
+                                    </button>
+                                );
+                            })}
                         </div>
 
                         { }
